@@ -1,12 +1,15 @@
 [phases.setup]
-nixPkgs = ["python313"]
+nixPkgs = ["python311"]
 
 [phases.install]
-cmds = ["pip install -r requirements.txt"]
+cmds = [
+  "python3 -m ensurepip --upgrade",
+  "python3 -m pip install --upgrade pip setuptools wheel",
+  "python3 -m pip install -r requirements.txt"
+]
 
 [phases.build]
 cmds = []
 
 [start]
-cmd = "python app.py"
-
+cmd = "python3 app.py"
