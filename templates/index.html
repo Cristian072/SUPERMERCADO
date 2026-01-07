@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supermercado Pro - Sistema de Predicción de Rentabilidad</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                        <rect width="40" height="40" rx="8" fill="url(#logoGradient)"/>
+                        <defs>
+                            <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#0EA5E9;stop-opacity:1" />
+                                <stop offset="50%" style="stop-color:#3B82F6;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#06B6D4;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        <path d="M20 10L28 18H24V26H16V18H12L20 10Z" fill="white"/>
+                        <path d="M20 30L12 22H16V14H24V22H28L20 30Z" fill="white" opacity="0.8"/>
+                    </svg>
+                    <h1>Supermercado Pro</h1>
+                </div>
+                <nav class="nav">
+                    <a href="#dashboard" class="nav-link active">Dashboard</a>
+                    <a href="#prediccion" class="nav-link">Predicción</a>
+                    <a href="#prediccion-clientes" class="nav-link">Predicción Clientes</a>
+                    <a href="#productos" class="nav-link">Productos</a>
+                    <a href="#clusters" class="nav-link">Clusters</a>
+                    <a href="#clusters-clientes" class="nav-link">Clusters Clientes</a>
+                </nav>
+                <div class="header-actions">
+                    <button class="btn-export" onclick="exportDashboardPDF()" title="Exportar Dashboard">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Exportar Dashboard
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="section active">
+                <div class="section-header">
+                    <h2>Dashboard de Rentabilidad</h2>
+                    <p class="section-subtitle">Análisis completo de productos y categorías</p>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                <line x1="12" y1="1" x2="12" y2="23"></line>
+                                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                            </svg>
+                        </div>
+                        <div class="stat-content">
+                            <p class="stat-label">Ingresos Totales</p>
+                            <p class="stat-value" id="total-ventas">$0</p>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                                <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                                <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                            </svg>
+                        </div>
+                        <div class="stat-content">
+                            <p class="stat-label">Productos Únicos</p>
+                            <p class="stat-value" id="productos-unicos">0</p>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                                <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                            </svg>
+                        </div>
+                        <div class="stat-content">
+                            <p class="stat-label">Transacciones</p>
+                            <p class="stat-value" id="total-transacciones">0</p>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                        </div>
+                        <div class="stat-content">
+                            <p class="stat-label">Ingreso Promedio</p>
+                            <p class="stat-value" id="ingreso-promedio">$0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Grid -->
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Ingresos por Categoría</h3>
+                        </div>
+                        <div id="chart-categories" class="chart-container"></div>
+                    </div>
+
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Clientes Más Frecuentes</h3>
+                        </div>
+                        <div id="chart-clients" class="chart-container"></div>
+                    </div>
+                </div>
+
+                <!-- Top Products Table -->
+                <div class="table-card">
+                    <div class="table-header">
+                        <h3>Top 20 Productos Más Rentables</h3>
+                    </div>
+                    <div class="table-container">
+                        <table id="table-products">
+                            <thead>
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Producto (Inglés)</th>
+                                    <th>Producto (Español)</th>
+                                    <th>Categoría</th>
+                                    <th>Ingresos</th>
+                                    <th>Cantidad</th>
+                                    <th>Precio Promedio</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-products-body">
+                                <tr>
+                                    <td colspan="6" class="loading">Cargando datos...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Prediction Section -->
+            <section id="prediccion" class="section">
+                <div class="section-header">
+                    <h2>Predicción de Rentabilidad</h2>
+                    <p class="section-subtitle">Ingresa un producto para predecir sus ingresos potenciales</p>
+                </div>
+
+                <div class="prediction-card">
+                    <form id="prediction-form" class="prediction-form">
+                        <div class="form-group">
+                            <label for="producto-select">Producto (Inglés o Español)</label>
+                            <select id="producto-select" name="producto" class="form-input">
+                                <option value="">Selecciona un producto...</option>
+                            </select>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="categoria-select">Categoría</label>
+                                <select id="categoria-select" name="categoria" class="form-input">
+                                    <option value="">Selecciona una categoría...</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="cantidad">Cantidad</label>
+                                <input type="number" id="cantidad" name="cantidad" class="form-input" value="1" min="1" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="precio-unitario">Precio Unitario ($)</label>
+                                <input type="number" id="precio-unitario" name="precio_unitario" class="form-input" value="0" min="0" step="0.01">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-primary">
+                            <span>Predecir Rentabilidad</span>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="9 18 15 12 9 6"></polyline>
+                            </svg>
+                        </button>
+                    </form>
+
+                    <div id="prediction-result" class="prediction-result hidden">
+                        <div class="result-header">
+                            <h3>Resultados de la Predicción</h3>
+                        </div>
+                        <div class="result-grid">
+                            <div class="result-card">
+                                <p class="result-label">Ingresos Predichos</p>
+                                <p class="result-value" id="prediccion-ingresos">$0.00</p>
+                            </div>
+                            <div class="result-card">
+                                <p class="result-label">Ingresos Esperados</p>
+                                <p class="result-value" id="ingresos-esperados">$0.00</p>
+                            </div>
+                            <div class="result-card highlight">
+                                <p class="result-label">Score de Rentabilidad</p>
+                                <p class="result-value" id="rentabilidad-score">0%</p>
+                            </div>
+                        </div>
+                        <div class="result-details">
+                            <h4>Detalles</h4>
+                            <div class="detail-item">
+                                <span>Producto:</span>
+                                <span id="detail-producto">-</span>
+                            </div>
+                            <div class="detail-item">
+                                <span>Categoría:</span>
+                                <span id="detail-categoria">-</span>
+                            </div>
+                            <div class="detail-item">
+                                <span>Cantidad:</span>
+                                <span id="detail-cantidad">-</span>
+                            </div>
+                            <div class="detail-item">
+                                <span>Precio Unitario:</span>
+                                <span id="detail-precio">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Client Prediction Section -->
+            <section id="prediccion-clientes" class="section">
+                <div class="section-header">
+                    <h2>Predicción de Clientes</h2>
+                    <p class="section-subtitle">Analiza el comportamiento y predice ingresos futuros de clientes</p>
+                </div>
+
+                <div class="prediction-card">
+                    <form id="client-prediction-form" class="prediction-form">
+                        <div class="form-group">
+                            <label for="client-id-select">ID de Cliente</label>
+                            <select id="client-id-select" name="client_id" class="form-input">
+                                <option value="">Selecciona un cliente...</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn-primary">
+                            <span>Predecir Comportamiento</span>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="9 18 15 12 9 6"></polyline>
+                            </svg>
+                        </button>
+                    </form>
+
+                    <div id="client-prediction-result" class="prediction-result hidden">
+                        <div class="result-header">
+                            <h3>Resultados de la Predicción</h3>
+                        </div>
+                        <div class="result-grid">
+                            <div class="result-card">
+                                <p class="result-label">Ingresos Diarios Predichos</p>
+                                <p class="result-value" id="client-prediccion-diarios">$0.00</p>
+                            </div>
+                            <div class="result-card">
+                                <p class="result-label">Proyección Mensual</p>
+                                <p class="result-value" id="client-proyeccion-mensual">$0.00</p>
+                            </div>
+                            <div class="result-card highlight">
+                                <p class="result-label">Ingresos Totales Históricos</p>
+                                <p class="result-value" id="client-ingresos-totales">$0.00</p>
+                            </div>
+                        </div>
+                        <div class="result-details">
+                            <h4>Métricas del Cliente</h4>
+                            <div class="detail-item">
+                                <span>ID Cliente:</span>
+                                <span id="detail-client-id">-</span>
+                            </div>
+                            <div class="detail-item">
+                                <span>Total de Compras:</span>
+                                <span id="detail-total-compras">-</span>
+                            </div>
+                            <div class="detail-item">
+                                <span>Cantidad Total:</span>
+                                <span id="detail-cantidad-total">-</span>
+                            </div>
+                            <div class="detail-item">
+                                <span>Productos Únicos:</span>
+                                <span id="detail-productos-unicos">-</span>
+                            </div>
+                            <div class="detail-item">
+                                <span>Categorías Únicas:</span>
+                                <span id="detail-categorias-unicas">-</span>
+                            </div>
+                            <div class="detail-item">
+                                <span>Categoría Preferida:</span>
+                                <span id="detail-categoria-preferida">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Products Section -->
+            <section id="productos" class="section">
+                <div class="section-header">
+                    <h2>Análisis de Productos</h2>
+                    <p class="section-subtitle">Explora todos los productos y sus métricas</p>
+                </div>
+
+                <div class="products-card">
+                    <div class="search-bar">
+                        <input type="text" id="product-search" placeholder="Buscar producto (inglés o español)..." class="search-input">
+                        <select id="category-filter" class="filter-select">
+                            <option value="">Todas las categorías</option>
+                        </select>
+                    </div>
+                    <div class="table-container">
+                        <table id="table-all-products">
+                            <thead>
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Producto (Inglés)</th>
+                                    <th>Producto (Español)</th>
+                                    <th>Categoría</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-all-products-body">
+                                <tr>
+                                    <td colspan="4" class="loading">Cargando productos...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Clusters Section -->
+            <section id="clusters" class="section">
+                <div class="section-header">
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap;">
+                        <div>
+                            <h2>Análisis de Clusters</h2>
+                            <p class="section-subtitle">Productos agrupados por similitud, rentabilidad o cantidad</p>
+                        </div>
+                        <button class="btn-export" onclick="exportClustersPDF()" style="margin-left: 20px; margin-top: 10px;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            Exportar PDF
+                        </button>
+                    </div>
+                </div>
+
+                <div class="clusters-card">
+                    <div id="clusters-summary" class="clusters-summary">
+                        <div class="loading">Cargando clusters...</div>
+                    </div>
+
+                    <div class="clusters-controls">
+                        <label for="cluster-filter">Filtrar por Cluster:</label>
+                        <select id="cluster-filter" class="filter-select">
+                            <option value="">Todos los clusters</option>
+                        </select>
+                    </div>
+
+                    <div class="chart-card" style="margin-top: 20px;">
+                        <div class="chart-header">
+                            <h3>Distribución de Clusters</h3>
+                        </div>
+                        <div id="chart-clusters" class="chart-container"></div>
+                    </div>
+
+                    <div class="table-card" style="margin-top: 20px;">
+                        <div class="table-header">
+                            <h3>Productos por Cluster</h3>
+                        </div>
+                        <div class="table-container">
+                            <table id="table-clusters">
+                                <thead>
+                                <tr>
+                                    <th>Cluster</th>
+                                    <th>Código</th>
+                                    <th>Producto (Inglés)</th>
+                                    <th>Producto (Español)</th>
+                                    <th>Categoría</th>
+                                    <th>Ingresos</th>
+                                    <th>Cantidad</th>
+                                </tr>
+                                </thead>
+                                <tbody id="table-clusters-body">
+                                    <tr>
+                                        <td colspan="6" class="loading">Cargando datos...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Clients Clusters Section -->
+            <section id="clusters-clientes" class="section">
+                <div class="section-header">
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap;">
+                        <div>
+                            <h2>Clusters de Clientes</h2>
+                            <p class="section-subtitle">Clientes agrupados por comportamiento de compra</p>
+                        </div>
+                        <button class="btn-export" onclick="exportClientsClustersPDF()" style="margin-left: 20px; margin-top: 10px;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            Exportar PDF
+                        </button>
+                    </div>
+                </div>
+
+                <div class="clusters-card">
+                    <div id="clients-clusters-summary" class="clusters-summary">
+                        <div class="loading">Cargando clusters de clientes...</div>
+                    </div>
+
+                    <div class="clusters-controls">
+                        <label for="client-cluster-filter">Filtrar por Cluster:</label>
+                        <select id="client-cluster-filter" class="filter-select">
+                            <option value="">Todos los clusters</option>
+                        </select>
+                    </div>
+
+                    <div class="chart-card" style="margin-top: 20px;">
+                        <div class="chart-header">
+                            <h3>Distribución de Clusters de Clientes</h3>
+                        </div>
+                        <div id="chart-clients-clusters" class="chart-container"></div>
+                    </div>
+
+                    <div class="table-card" style="margin-top: 20px;">
+                        <div class="table-header">
+                            <h3>Clientes por Cluster</h3>
+                        </div>
+                        <div class="table-container">
+                            <table id="table-clients-clusters">
+                                <thead>
+                                    <tr>
+                                        <th>Cluster</th>
+                                        <th>ID Cliente</th>
+                                        <th>Ingresos Totales</th>
+                                        <th>Transacciones</th>
+                                        <th>Cantidad Total</th>
+                                        <th>Productos Únicos</th>
+                                        <th>Frecuencia</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-clients-clusters-body">
+                                    <tr>
+                                        <td colspan="7" class="loading">Cargando datos...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
+
