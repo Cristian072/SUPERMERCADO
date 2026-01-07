@@ -543,6 +543,11 @@ if __name__ == '__main__':
         print("   para entrenar el modelo primero.\n")
     
     print("Aplicación lista!")
-    print("Accede a: http://localhost:5000")
-    app.run(debug=True, port=5000)
+    
+    # Railway usa la variable de entorno PORT, si no existe usa 5000
+    port = int(os.environ.get('PORT', 5000))
+    debug = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
+    
+    print(f"Accede a: http://localhost:{port}")
+    app.run(host='0.0.0.0', port=port, debug=debug)
 

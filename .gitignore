@@ -23,13 +23,15 @@ wheels/
 .installed.cfg
 *.egg
 
-# Model files
+# Model files - Los modelos en models/ se subirán con git add -f
+# Ignorar modelos en la raíz pero permitir en models/
 *.pkl
 *.joblib
 *.h5
 *.model
 
-# Models directory (keep structure but ignore large files)
+# Models directory - Los modelos se subirán con git add -f
+# Para subir modelos: git add -f models/*.pkl models/*.csv
 models/*.pkl
 models/*.joblib
 models/*.csv
@@ -47,4 +49,3 @@ Thumbs.db
 
 # Logs
 *.log
-
